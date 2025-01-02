@@ -1,13 +1,9 @@
-using System.Collections.Generic;
-using Dawn.Game.Event;
-using OpenIM.IMSDK.Unity;
-using OpenIM.IMSDK.Unity.Listener;
-using UnityEngine;
+using OpenIM.IMSDK.Listener;
 namespace Dawn.Game
 {
-    public class Conn : IConnListener
+    public class ConnListener : IConnListener
     {
-        public Conn()
+        public ConnListener()
         {
         }
 

@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
-using UnityGameFramework.Runtime;
+using OpenIM.Proto;
+
 namespace Dawn.Game.Event
 {
     public enum GroupOperation
@@ -33,11 +30,11 @@ namespace Dawn.Game.Event
             }
         }
         public GroupOperation Operation;
-        public OpenIM.IMSDK.Unity.Conversation OldConversation;
-        public OpenIM.IMSDK.Unity.Conversation NewConversation;
-        public GroupInfo Group;
-        public GroupApplicationInfo GroupRequest;
-        public GroupMember GroupMemeber;
+        public IMConversation OldConversation;
+        public IMConversation NewConversation;
+        public IMGroup Group;
+        public IMGroupApplication GroupRequest;
+        public IMGroupMember GroupMemeber;
         public override void Clear()
         {
             Operation = GroupOperation.None;

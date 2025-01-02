@@ -3,7 +3,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using SuperScrollView;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -21,7 +22,7 @@ namespace Dawn.Game.UI
         Button backBtn;
         LoopListView2 searchResList;
         RectTransform searchEmpty;
-        List<PublicUserInfo> searchResultListInfo;
+        IMUser[] searchResultListInfo;
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
@@ -49,7 +50,7 @@ namespace Dawn.Game.UI
                     itemNode.IsInitHandlerCalled = true;
                 }
                 SerachResultItem item = itemNode.UserObjectData as SerachResultItem;
-                PublicUserInfo info = searchResultListInfo[index];
+                IMUser info = searchResultListInfo[index];
                 item.Name.text = info.Nickname;
                 SetImage(item.Icon, info.FaceURL);
                 OnClick(item.Btn, () =>
@@ -75,21 +76,17 @@ namespace Dawn.Game.UI
                 {
                     return;
                 }
-                IMSDK.GetUsersInfo((list, errCode, errMsg) =>
+                IMSDK.GetUsersInfo((list) =>
                 {
-                    if (list != null && list.Count > 0)
+                    if (list != null && list.Length > 0)
                     {
                         searchResultListInfo = list;
                     }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
-                    }
-                    if (searchResultListInfo != null && searchResultListInfo.Count > 0)
+                    if (searchResultListInfo != null && searchResultListInfo.Length > 0)
                     {
                         searchResList.gameObject.SetActive(true);
                         searchEmpty.gameObject.SetActive(false);
-                        RefreshList(searchResList, searchResultListInfo.Count);
+                        RefreshList(searchResList, searchResultListInfo.Length);
                     }
                     else
                     {

@@ -3,9 +3,10 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using SuperScrollView;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
 using Dawn.Game.Event;
 using GameFramework.Event;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -22,18 +23,17 @@ namespace Dawn.Game.UI
         Button backBtn;
         Button createGroupBtn;
         LoopListView2 groupList;
-        List<GroupInfo> groupListInfo;
+        IMGroup[] groupListInfo;
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
             backBtn = GetButton("Panel/content/top/back");
             createGroupBtn = GetButton("Panel/content/top/create");
             groupList = GetListView("Panel/content/list");
-            groupListInfo = new List<GroupInfo>();
             groupList.InitListView(0, (list, index) =>
             {
                 if (index < 0) return null;
-                if (groupListInfo.Count <= index) return null;
+                if (groupListInfo.Length <= index) return null;
                 LoopListViewItem2 itemNode = list.NewListViewItem("item");
                 if (!itemNode.IsInitHandlerCalled)
                 {
@@ -79,7 +79,7 @@ namespace Dawn.Game.UI
             {
                 GameEntry.UI.OpenUI("CreateGroup");
             });
-            groupListInfo.Clear();
+            groupListInfo = new IMGroup[0];
             RefreshGroupList();
             GameEntry.Event.Subscribe(OnGroupChange.EventId, handleGroupChange);
 
@@ -92,17 +92,12 @@ namespace Dawn.Game.UI
 
         void RefreshGroupList()
         {
-            IMSDK.GetJoinedGroupList((list, errCode, errMsg) =>
+            IMSDK.GetJoinedGroups((list) =>
             {
                 if (list != null)
                 {
-                    groupListInfo.Clear();
-                    groupListInfo.AddRange(list);
-                    RefreshList(groupList, groupListInfo.Count);
-                }
-                else
-                {
-                    GameEntry.UI.Tip(errMsg);
+                    groupListInfo = list;
+                    RefreshList(groupList, groupListInfo.Length);
                 }
             });
         }

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
+using OpenIM.Proto;
 using UnityGameFramework.Runtime;
 namespace Dawn.Game.Event
 {
@@ -19,9 +19,9 @@ namespace Dawn.Game.Event
                 return EventId;
             }
         }
-        public BlackInfo Black;
-        public FriendInfo Friend;
-        public FriendApplicationInfo FriendRequest;
+        public IMBlack Black;
+        public IMFriend Friend;
+        public IMFriendApplication FriendRequest;
         public FriendOperation Operation;
         public override void Clear()
         {

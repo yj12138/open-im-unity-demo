@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
 using UnityGameFramework.Runtime;
 namespace Dawn.Game.Event
 {

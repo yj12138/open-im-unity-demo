@@ -2,8 +2,8 @@
 using GameFramework.Procedure;
 using Dawn.Game.Event;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
-using UnityEngine;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 namespace Dawn.Game
 {
     public class ProcedureLogin : ProcedureBase
@@ -23,14 +23,19 @@ namespace Dawn.Game
             GameEntry.Event.Subscribe(OnConnStatusChange.EventId, HandleConnStatusChange);
 
             UILoginId = -1;
-            if (IMSDK.GetLoginStatus() == LoginStatus.Logged)
+
+            IMSDK.GetLoginStatus((status) =>
             {
-                ChangeState<ProcedureMain>(procedureOwner);
-            }
-            else
-            {
-                UILoginId = GameEntry.UI.OpenUI("Login");
-            }
+                if (status == LoginStatus.Logged)
+                {
+                    ChangeState<ProcedureMain>(procedureOwner);
+                }
+                else
+                {
+                    UILoginId = GameEntry.UI.OpenUI("Login");
+                }
+            });
+
         }
 
         void HandlerLoginStatusChange(object sender, GameEventArgs eventArgs)

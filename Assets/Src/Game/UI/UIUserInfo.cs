@@ -1,13 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using SuperScrollView;
-using UnityGameFramework.Runtime;
-using OpenIM.IMSDK.Unity;
-using OpenIM.IMSDK.Unity.Util;
-using System.Runtime.InteropServices;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -60,18 +55,14 @@ namespace Dawn.Game.UI
 
             userIcon.sprite = null;
             userName.text = "";
-            if (userId == IMSDK.GetLoginUserId())
+            if (userId == Player.Instance.UserId)
             {
-                IMSDK.GetSelfUserInfo((userInfo, err, errMsg) =>
+                IMSDK.GetSelfUserInfo((userInfo) =>
                 {
                     if (userInfo != null)
                     {
                         SetImage(userIcon, userInfo.FaceURL);
                         userName.text = userInfo.Nickname;
-                    }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
                     }
                 });
                 addTrans.gameObject.SetActive(false);
@@ -80,45 +71,37 @@ namespace Dawn.Game.UI
             }
             else
             {
-                IMSDK.GetUsersInfo((list, err, errMsg) =>
+                IMSDK.GetUsersInfo((list) =>
                 {
                     if (list != null)
                     {
-                        if (list.Count >= 1)
+                        if (list.Length >= 1)
                         {
                             var userInfo = list[0];
                             SetImage(userIcon, userInfo.FaceURL);
                             userName.text = userInfo.Nickname;
                         }
                     }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
-                    }
                 }, new string[1] { userId });
 
-                IMSDK.CheckFriend((list, err, errMsg) =>
+                IMSDK.CheckFriend((list) =>
                 {
-                    if (list != null && list.Count == 1)
+                    if (list != null && list.Length == 1)
                     {
-                        if (list[0].Result == 1)
+                        if (list[0].Result == CheckFriendResult.IsFriend)
                         {
                             friendTrans.gameObject.SetActive(true);
                             addTrans.gameObject.SetActive(false);
 
                             OnClick(sendMsgBtn, () =>
                             {
-                                IMSDK.GetOneConversation((conversation, err, errMsg) =>
+                                IMSDK.GetOneConversation((conversation) =>
                                 {
                                     if (conversation != null)
                                     {
                                         GameEntry.UI.OpenUI("Chat", conversation);
                                     }
-                                    else
-                                    {
-                                        Debug.LogError(err + ":" + errMsg);
-                                    }
-                                }, ConversationType.Single, userId);
+                                }, SessionType.Single, userId);
                             });
                         }
                         else
@@ -127,23 +110,13 @@ namespace Dawn.Game.UI
                             addTrans.gameObject.SetActive(true);
                             OnClick(addBtn, () =>
                             {
-                                IMSDK.AddFriend((suc, errCode, errMsg) =>
+                                IMSDK.AddFriend((suc) =>
                                 {
-                                    if (!suc)
-                                    {
-                                        Debug.Log(errCode + ":" + errMsg);
-                                    }
-                                    else
+                                    if (suc)
                                     {
                                         CloseSelf();
                                     }
-                                }, new ApplyToAddFriendReq()
-                                {
-                                    FromUserID = IMSDK.GetLoginUserId(),
-                                    ToUserID = userId,
-                                    ReqMsg = reqMsg.text,
-                                    Ex = "",
-                                });
+                                }, userId, reqMsg.text, "");
                             });
                         }
                     }

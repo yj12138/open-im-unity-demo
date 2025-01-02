@@ -1,8 +1,9 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using OpenIM.IMSDK.Unity;
 using Dawn.Game.Event;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -15,7 +16,7 @@ namespace Dawn.Game.UI
         Button headIconBtn;
         Image headIcon;
         Button saveBtn;
-        UserInfo localUser;
+        IMUser userInfo;
         string headIconURL = "";
         protected override void OnInit(object userData)
         {
@@ -35,18 +36,14 @@ namespace Dawn.Game.UI
             userId.text = "";
             nickName.text = "";
             headIcon.sprite = null;
-            IMSDK.GetSelfUserInfo((localUser, err, errMsg) =>
+            IMSDK.GetSelfUserInfo((user) =>
             {
-                this.localUser = localUser;
-                if (localUser != null)
+                this.userInfo = user;
+                if (user != null)
                 {
-                    userId.text = localUser.UserID;
-                    nickName.text = localUser.Nickname;
-                    SetImage(headIcon, localUser.FaceURL);
-                }
-                else
-                {
-                    Debug.LogError(errMsg);
+                    userId.text = user.UserID;
+                    nickName.text = user.Nickname;
+                    SetImage(headIcon, user.FaceURL);
                 }
             });
 
@@ -62,9 +59,9 @@ namespace Dawn.Game.UI
 
             OnClick(saveBtn, () =>
             {
-                if (this.localUser != null)
+                if (this.userInfo != null)
                 {
-                    IMSDK.SetSelfInfo((suc, err, errMsg) =>
+                    IMSDK.SetSelfInfo((suc) =>
                     {
                         if (suc)
                         {
@@ -72,13 +69,9 @@ namespace Dawn.Game.UI
                             GameEntry.UI.Tip("Save Success");
                             CloseSelf();
                         }
-                        else
-                        {
-                            GameEntry.UI.Tip(errMsg);
-                        }
-                    }, new UserInfo()
+                    }, new SetSelfInfoReq()
                     {
-                        UserID = localUser.UserID,
+                        UserID = userInfo.UserID,
                         Nickname = nickName.text,
                         FaceURL = headIconURL,
                     });

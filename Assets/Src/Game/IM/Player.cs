@@ -1,5 +1,5 @@
-using OpenIM.IMSDK.Unity;
-using OpenIM.IMSDK.Unity.Listener;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 using UnityEngine;
 
 namespace Dawn.Game
@@ -26,63 +26,71 @@ namespace Dawn.Game
                 return instance;
             }
         }
-
+        public string UserId = "";
+        public string Token = "";
         public UserStatus Status = UserStatus.NoLogin;
-        public Conn conn;
-        public Conversation conversation;
-        public FriendShip friend;
-        public Group group;
-        public AdvancedMsg advancedMsg;
-        public BatchMsg batchMsg;
-        public User user;
+        public ConnListener conn;
+        public ConversationListener conversation;
+        public FriendShipListener friend;
+        public GroupListener group;
+        public MessageListener message;
+        public UserListener user;
         private Player()
         {
-            conn = new Conn();
-            conversation = new Conversation();
-            friend = new FriendShip();
-            group = new Group();
-            advancedMsg = new AdvancedMsg();
-            batchMsg = new BatchMsg();
-            user = new User();
+            conn = new ConnListener();
+            conversation = new ConversationListener();
+            friend = new FriendShipListener();
+            group = new GroupListener();
+            message = new MessageListener();
+            user = new UserListener();
         }
 
-        public static PlatformID PlatformID
+        public static Platform Platform
         {
             get
             {
                 if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer)
                 {
-                    return PlatformID.WindowsPlatformID;
+                    return Platform.Windows;
                 }
                 else if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
                 {
-                    return PlatformID.OSXPlatformID;
+                    return Platform.MacOs;
                 }
                 else if (Application.platform == RuntimePlatform.Android)
                 {
-                    return PlatformID.AndroidPlatformID;
+                    return Platform.Android;
                 }
                 else if (Application.platform == RuntimePlatform.IPhonePlayer)
                 {
-                    return PlatformID.IOSPlatformID;
+                    return Platform.IOs;
                 }
-                return PlatformID.None;
+                return Platform.Admin;
             }
         }
 
-        public void RegisterListener()
+        public void Init(IMConfig config)
         {
+            IMSDK.SetErrorHandler((errCode, errMsg) =>
+            {
+                Debug.LogError(errMsg);
+            });
+
+            IMSDK.SetConnListener(conn);
             IMSDK.SetConversationListener(conversation);
             IMSDK.SetFriendShipListener(friend);
             IMSDK.SetGroupListener(group);
-            IMSDK.SetAdvancedMsgListener(advancedMsg);
-            IMSDK.SetBatchMsgListener(batchMsg);
+            IMSDK.SetMessageListener(message);
             IMSDK.SetUserListener(user);
+            IMSDK.InitSDK((suc) =>
+            {
+                Debug.Log("InitSDK:" + suc);
+            }, config);
         }
 
         public void Login(string userId, string token)
         {
-            IMSDK.Login(userId, token, (suc, errCode, errMsg) =>
+            IMSDK.Login((suc) =>
             {
                 if (suc)
                 {
@@ -96,10 +104,12 @@ namespace Dawn.Game
                         UserStatus = UserStatus.LoginFailed
                     });
                 }
-            });
+            }, userId, token);
         }
         public void OnLoginSuc(string userId, string token)
         {
+            this.UserId = userId;
+            this.Token = token;
             Status = UserStatus.LoginSuc;
             GameEntry.Event.Fire(this, new Event.OnLoginStatusChange()
             {

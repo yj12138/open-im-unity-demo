@@ -3,10 +3,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using SuperScrollView;
-using OpenIM.IMSDK.Unity;
-using Dawn.Game.Event;
-using GameFramework.Event;
-using System;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -25,7 +23,7 @@ namespace Dawn.Game.UI
         Image faceIcon;
         TMP_InputField groupNameInput;
         LoopListView2 memberList;
-        List<FriendInfo> selectFriends;
+        IMFriend[] selectFriends;
         string selectIcon = "";
         protected override void OnInit(object userData)
         {
@@ -38,7 +36,7 @@ namespace Dawn.Game.UI
             createBtn = GetButton("Panel/content/center/createbtn/btn");
             memberList = GetListView("Panel/content/center/members/list");
 
-            selectFriends = new List<FriendInfo>();
+            selectFriends = new IMFriend[0];
             memberList.InitListView(0, (list, index) =>
             {
                 if (index < 0) return null;
@@ -84,7 +82,7 @@ namespace Dawn.Game.UI
                     GameEntry.UI.Tip("groupName is empty");
                     return;
                 }
-                if (selectFriends.Count <= 0)
+                if (selectFriends.Length <= 0)
                 {
                     GameEntry.UI.Tip("not select members");
                     return;
@@ -94,29 +92,19 @@ namespace Dawn.Game.UI
                 {
                     membersId.Add(userInfo.FriendUserID);
                 }
-                IMSDK.CreateGroup((groupInfo, err, errMsg) =>
+                var req = new CreateGroupReq()
+                {
+                    GroupName = groupNameInput.text,
+                };
+                req.MemberUserIDs.Add(membersId);
+                IMSDK.CreateGroup((groupInfo) =>
                 {
                     if (groupInfo != null)
                     {
-                        CloseSelf();
                         GameEntry.UI.Tip("Create Group Success");
+                        CloseSelf();
                     }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
-                    }
-                }, new CreateGroupReq()
-                {
-                    MemberUserIDs = membersId.ToArray(),
-                    AdminUserIDs = null,
-                    OwnerUserID = IMSDK.GetLoginUserId(),
-                    GroupInfo = new GroupInfo()
-                    {
-                        GroupType = (int)GroupType.Group,
-                        GroupName = groupNameInput.text,
-                        FaceURL = selectIcon,
-                    }
-                });
+                }, req);
             });
             selectIcon = "headicon/不知火舞";
             groupNameInput.text = "";
@@ -130,12 +118,11 @@ namespace Dawn.Game.UI
             SetImage(faceIcon, url);
             selectIcon = url;
         }
-        void OnSelectFriends(FriendInfo[] list)
+        void OnSelectFriends(IMFriend[] list)
         {
             if (list.Length <= 0) return;
-            selectFriends.Clear();
-            selectFriends.AddRange(list);
-            RefreshList(memberList, selectFriends.Count);
+            selectFriends = list;
+            RefreshList(memberList, selectFriends.Length);
         }
     }
 }

@@ -1,9 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using SuperScrollView;
-using OpenIM.IMSDK.Unity;
-using System.Collections.Generic;
+using OpenIM.IMSDK;
 using Dawn.Game.Event;
 using GameFramework.Event;
 
@@ -41,15 +39,11 @@ namespace Dawn.Game.UI
             });
             OnClick(logoutBtn, () =>
             {
-                IMSDK.Logout((suc, err, errMsg) =>
+                IMSDK.Logout((suc) =>
                 {
                     if (suc)
                     {
-                        GameEntry.Event.Fire(this, new Event.OnLogout());
-                    }
-                    else
-                    {
-                        Debug.Log(err + ":" + errMsg);
+                        GameEntry.Event.Fire(this, new OnLogout());
                     }
                 });
             });
@@ -59,16 +53,12 @@ namespace Dawn.Game.UI
         void RefreshUserInfo()
         {
             ownerName.text = "";
-            IMSDK.GetSelfUserInfo((localUser, err, errMsg) =>
+            IMSDK.GetSelfUserInfo((localUser) =>
             {
                 if (localUser != null)
                 {
                     ownerName.text = localUser.Nickname;
                     SetImage(ownerIcon, localUser.FaceURL);
-                }
-                else
-                {
-                    GameEntry.UI.Tip(errMsg);
                 }
             });
         }

@@ -5,7 +5,8 @@ using SuperScrollView;
 using System.Collections.Generic;
 using Dawn.Game.Event;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -23,7 +24,7 @@ namespace Dawn.Game.UI
         Button groupBtn;
         Button newFriendBtn;
         LoopListView2 friendList;
-        List<FriendInfo> friends;
+        IMFriend[] friends;
         void InitFriend()
         {
             friendRoot = GetRectTransform("Panel/content/center/friend");
@@ -80,16 +81,12 @@ namespace Dawn.Game.UI
 
         void RefreshFriendList()
         {
-            IMSDK.GetFriendList((list, err, errMsg) =>
+            IMSDK.GetFriends((list) =>
             {
                 if (list != null)
                 {
                     friends = list;
-                    RefreshList(friendList, friends.Count);
-                }
-                else
-                {
-                    Debug.LogError(errMsg);
+                    RefreshList(friendList, friends.Length);
                 }
             }, true);
         }

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
+using OpenIM.Proto;
 using UnityGameFramework.Runtime;
 namespace Dawn.Game.Event
 {
@@ -22,7 +22,7 @@ namespace Dawn.Game.Event
         }
         public bool Created;
         public bool ClearHistory;
-        public OpenIM.IMSDK.Unity.Conversation Conversation;
+        public IMConversation Conversation;
         public SyncServerStatus SyncServerStatus = SyncServerStatus.Empty;
         public bool IsTotalUnReadChanged;
         public override void Clear()

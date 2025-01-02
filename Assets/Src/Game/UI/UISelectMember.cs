@@ -4,11 +4,12 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using SuperScrollView;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
-    public delegate void OnSelectFriends(FriendInfo[] selectUsers);
+    public delegate void OnSelectFriends(IMFriend[] selectUsers);
     public class UISelectMember : UGuiForm
     {
         class Item
@@ -22,8 +23,8 @@ namespace Dawn.Game.UI
         Button backBtn;
         Button confirmBtn;
         OnSelectFriends onSelectFriends;
-        Dictionary<int, FriendInfo> selectFriends;
-        List<FriendInfo> friends;
+        Dictionary<int, IMFriend> selectFriends;
+        IMFriend[] friends;
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
@@ -62,12 +63,12 @@ namespace Dawn.Game.UI
                     {
                         selectFriends.Add(index, friendInfo);
                     }
-                    RefreshList(this.list, friends.Count);
+                    RefreshList(this.list, friends.Length);
                 });
                 return itemNode;
             });
 
-            selectFriends = new Dictionary<int, FriendInfo>();
+            selectFriends = new Dictionary<int, IMFriend>();
         }
         protected override void OnOpen(object userData)
         {
@@ -84,7 +85,7 @@ namespace Dawn.Game.UI
             {
                 if (selectFriends.Count > 0 && onSelectFriends != null)
                 {
-                    var members = new FriendInfo[selectFriends.Count];
+                    var members = new IMFriend[selectFriends.Count];
                     int index = 0;
                     foreach (var member in selectFriends)
                     {
@@ -97,23 +98,19 @@ namespace Dawn.Game.UI
             });
 
             list.SetListItemCount(0);
-            IMSDK.GetFriendList((list, err, errMsg) =>
+            IMSDK.GetFriends((list) =>
             {
                 if (list != null)
                 {
                     friends = list;
-                    RefreshList(this.list, friends.Count);
-                }
-                else
-                {
-                    GameEntry.UI.Tip(errMsg);
+                    RefreshList(this.list, friends.Length);
                 }
             }, true);
         }
         protected override void OnClose(bool isShutdown, object userData)
         {
             base.OnClose(isShutdown, userData);
-            friends.Clear();
+            friends = null;
             selectFriends.Clear();
         }
 

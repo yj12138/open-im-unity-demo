@@ -3,11 +3,10 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using SuperScrollView;
-using OpenIM.IMSDK.Unity;
 using Dawn.Game.Event;
 using GameFramework.Event;
-using System;
-
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 namespace Dawn.Game.UI
 {
     public class UIChatInfo : UGuiForm
@@ -29,11 +28,11 @@ namespace Dawn.Game.UI
         RectTransform groupExitRect;
         Button groupExitBtn;
 
-        OpenIM.IMSDK.Unity.Conversation conversation;
-        OpenIM.IMSDK.Unity.Conversation createdConversation;
-        List<GroupMember> membersInfo;
+        IMConversation conversation;
+        IMConversation createdConversation;
+        List<IMGroupMember> membersInfo;
 
-        GroupInfo localGroup;
+        IMGroup localGroup;
 
         protected override void OnInit(object userData)
         {
@@ -78,7 +77,7 @@ namespace Dawn.Game.UI
                     var info = membersInfo[index];
                     SetImage(item.Icon, info.FaceURL);
                     item.Name.text = info.Nickname;
-                    if (conversation.ConversationType == (int)ConversationType.Single)
+                    if (conversation.ConversationType == SessionType.Single)
                     {
 
                     }
@@ -97,7 +96,8 @@ namespace Dawn.Game.UI
         protected override void OnOpen(object userData)
         {
             base.OnOpen(userData);
-            conversation = userData as OpenIM.IMSDK.Unity.Conversation;
+            conversation = userData as IMConversation;
+            membersInfo = new List<IMGroupMember>();
             OnClick(backBtn, () =>
             {
                 CloseSelf();
@@ -108,7 +108,7 @@ namespace Dawn.Game.UI
             });
             OnClick(clearChat, () =>
             {
-                IMSDK.ClearConversationAndDeleteAllMsg((suc, err, errMsg) =>
+                IMSDK.ClearConversationAndDeleteAllMsg((suc) =>
                 {
                     if (suc)
                     {
@@ -119,10 +119,6 @@ namespace Dawn.Game.UI
                             ClearHistory = true,
                         });
                         CloseSelf();
-                    }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
                     }
                 }, conversation.ConversationID);
             });
@@ -138,13 +134,13 @@ namespace Dawn.Game.UI
         }
         void RefreshUI()
         {
-            if (conversation.ConversationType == (int)ConversationType.Single)
+            if (conversation.ConversationType == SessionType.Single)
             {
                 groupNameRect.gameObject.SetActive(false);
                 groupExitRect.gameObject.SetActive(false);
 
-                membersInfo = new List<GroupMember>();
-                membersInfo.Add(new GroupMember()
+                membersInfo = new List<IMGroupMember>();
+                membersInfo.Add(new IMGroupMember()
                 {
                     UserID = conversation.UserID,
                     Nickname = conversation.ShowName,
@@ -152,37 +148,29 @@ namespace Dawn.Game.UI
                 });
                 RefreshGrid(memberList, membersInfo.Count + 1);
             }
-            else if (conversation.ConversationType == (int)ConversationType.Group)
+            else if (conversation.ConversationType == SessionType.ReadGroup)
             {
                 groupNameRect.gameObject.SetActive(true);
                 groupExitRect.gameObject.SetActive(true);
 
-                IMSDK.GetSpecifiedGroupsInfo((list, err, errMsg) =>
+                IMSDK.GetSpecifiedGroupsInfo((list) =>
                 {
                     if (list != null)
                     {
-                        if (list.Count >= 1)
+                        if (list.Length >= 1)
                         {
                             localGroup = list[0];
                             groupName.text = localGroup.GroupName;
 
                         }
                     }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
-                    }
                 }, new string[] { conversation.GroupID });
-                IMSDK.GetGroupMemberList((list, err, errMsg) =>
+                IMSDK.GetGroupMembers((list) =>
                 {
                     if (list != null)
                     {
-                        membersInfo = list;
+                        membersInfo.AddRange(list);
                         RefreshGrid(memberList, membersInfo.Count + 1);
-                    }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
                     }
                 }, conversation.GroupID, 0, 0, 0);
                 OnClick(groupNameBtn, () =>
@@ -191,22 +179,18 @@ namespace Dawn.Game.UI
                 });
                 OnClick(groupExitBtn, () =>
                 {
-                    IMSDK.QuitGroup((suc, err, errMsg) =>
+                    IMSDK.QuitGroup((suc) =>
                     {
                         if (suc)
                         {
                             GameEntry.UI.Tip("Quit Group Success");
-                        }
-                        else
-                        {
-                            GameEntry.UI.Tip(errMsg);
                         }
                     }, conversation.GroupID);
                 });
             }
         }
 
-        void OnSelectFriends(FriendInfo[] selectUsers)
+        void OnSelectFriends(IMFriend[] selectUsers)
         {
             if (selectUsers.Length <= 0) return;
             var name = "";
@@ -216,10 +200,14 @@ namespace Dawn.Game.UI
                 name = name + selectUsers[i].Nickname;
                 members[i] = selectUsers[i].FriendUserID;
             }
-            if (conversation.ConversationType == (int)ConversationType.Single)
+            if (conversation.ConversationType == SessionType.Single)
             {
-
-                IMSDK.CreateGroup((groupInfo, err, errMsg) =>
+                var req = new CreateGroupReq()
+                {
+                    GroupName = name,
+                };
+                req.MemberUserIDs.Add(members);
+                IMSDK.CreateGroup((groupInfo) =>
                 {
                     if (groupInfo != null)
                     {
@@ -237,33 +225,15 @@ namespace Dawn.Game.UI
                             });
                         }
                     }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
-                    }
-                }, new CreateGroupReq()
-                {
-                    MemberUserIDs = members,
-                    AdminUserIDs = members,
-                    OwnerUserID = IMSDK.GetLoginUserId(),
-                    GroupInfo = new GroupInfo()
-                    {
-                        GroupType = (int)GroupType.Group,
-                        GroupName = name,
-                    }
-                });
+                }, req);
             }
-            else if (conversation.ConversationType == (int)ConversationType.Group)
+            else if (conversation.ConversationType == SessionType.ReadGroup)
             {
-                IMSDK.InviteUserToGroup((suc, err, errMsg) =>
+                IMSDK.InviteUserToGroup((suc) =>
                 {
                     if (suc)
                     {
                         GameEntry.UI.Tip("Invite User Suc");
-                    }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
                     }
                 }, conversation.GroupID, "", members);
             }

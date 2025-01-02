@@ -1,17 +1,17 @@
 using Dawn.Game.Event;
-using OpenIM.IMSDK.Unity;
-using OpenIM.IMSDK.Unity.Listener;
+using OpenIM.Proto;
+using OpenIM.IMSDK.Listener;
 
 
 namespace Dawn.Game
 {
-    public class Group : IGroupListener
+    public class GroupListener : IGroupListener
     {
-        public Group()
+        public GroupListener()
         {
         }
 
-        public void OnGroupApplicationAccepted(GroupApplicationInfo groupApplication)
+        public void OnGroupApplicationAccepted(IMGroupApplication groupApplication)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -20,7 +20,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupApplicationAdded(GroupApplicationInfo groupApplication)
+        public void OnGroupApplicationAdded(IMGroupApplication groupApplication)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -29,7 +29,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupApplicationDeleted(GroupApplicationInfo groupApplication)
+        public void OnGroupApplicationDeleted(IMGroupApplication groupApplication)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -38,7 +38,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupApplicationRejected(GroupApplicationInfo groupApplication)
+        public void OnGroupApplicationRejected(IMGroupApplication groupApplication)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -47,7 +47,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupDismissed(GroupInfo groupInfo)
+        public void OnGroupDismissed(IMGroup groupInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -56,7 +56,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupInfoChanged(GroupInfo groupInfo)
+        public void OnGroupInfoChanged(IMGroup groupInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -65,7 +65,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupMemberAdded(GroupMember groupMemberInfo)
+        public void OnGroupMemberAdded(IMGroupMember groupMemberInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -74,7 +74,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupMemberDeleted(GroupMember groupMemberInfo)
+        public void OnGroupMemberDeleted(IMGroupMember groupMemberInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -83,7 +83,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnGroupMemberInfoChanged(GroupMember groupMemberInfo)
+        public void OnGroupMemberInfoChanged(IMGroupMember groupMemberInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -92,7 +92,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnJoinedGroupAdded(GroupInfo groupInfo)
+        public void OnJoinedGroupAdded(IMGroup groupInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {
@@ -101,7 +101,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnJoinedGroupDeleted(GroupInfo groupInfo)
+        public void OnJoinedGroupDeleted(IMGroup groupInfo)
         {
             GameEntry.Event.Fire(OnGroupChange.EventId, new OnGroupChange()
             {

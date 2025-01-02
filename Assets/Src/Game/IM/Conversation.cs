@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using Dawn.Game.Event;
-using OpenIM.IMSDK.Unity;
-using OpenIM.IMSDK.Unity.Listener;
+using OpenIM.Proto;
+using OpenIM.IMSDK.Listener;
 
 namespace Dawn.Game
 {
-    public class Conversation : IConversationListener
+    public class ConversationListener : IConversationListener
     {
-        public Conversation()
+        public ConversationListener()
         {
         }
 
-        public void OnConversationChanged(List<OpenIM.IMSDK.Unity.Conversation> conversationList)
+        public void OnConversationChanged(IMConversation[] conversationList)
         {
             if (conversationList != null)
             {
@@ -26,7 +26,7 @@ namespace Dawn.Game
             }
         }
 
-        public void OnNewConversation(List<OpenIM.IMSDK.Unity.Conversation> conversationList)
+        public void OnNewConversation(IMConversation[] conversationList)
         {
             if (conversationList != null)
             {
@@ -40,28 +40,6 @@ namespace Dawn.Game
                 }
             }
         }
-        public void OnSyncServerStart()
-        {
-            GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
-            {
-                SyncServerStatus = SyncServerStatus.Start
-            });
-        }
-        public void OnSyncServerFailed()
-        {
-            GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
-            {
-                SyncServerStatus = SyncServerStatus.Failed
-            });
-        }
-        public void OnSyncServerFinish()
-        {
-            GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
-            {
-                SyncServerStatus = SyncServerStatus.Finish
-            });
-        }
-
         public void OnTotalUnreadMessageCountChanged(int totalUnreadCount)
         {
             GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
@@ -70,14 +48,37 @@ namespace Dawn.Game
             });
         }
 
-        public void OnConversationUserInputStatusChanged(InputStatesChangedData data)
+        public void OnSyncServerProgress(int progress)
         {
             // TODO
         }
 
-        public void OnSyncServerProgress(int progress)
+        public void OnSyncServerStart(bool reinstalled)
         {
-            // TODO
+            GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
+            {
+                SyncServerStatus = SyncServerStatus.Start
+            });
+        }
+
+        public void OnSyncServerFinish(bool reinstalled)
+        {
+            GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
+            {
+                SyncServerStatus = SyncServerStatus.Finish
+            });
+        }
+
+        public void OnSyncServerFailed(bool reinstalled)
+        {
+            GameEntry.Event.Fire(OnConversationChange.EventId, new OnConversationChange()
+            {
+                SyncServerStatus = SyncServerStatus.Failed
+            });
+        }
+
+        public void OnConversationUserInputStatusChanged(string conversationId, string userId, Platform[] platforms)
+        {
         }
     }
 }

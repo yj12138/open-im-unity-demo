@@ -1,30 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using OpenIM.IMSDK.Unity.Listener;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK.Listener;
+using OpenIM.Proto;
 
 namespace Dawn.Game
 {
-    public class User : IUserListener
+    public class UserListener : IUserListener
     {
-        public void OnSelfInfoUpdated(UserInfo userInfo)
+        public void OnSelfInfoUpdated(IMUser userInfo)
         {
         }
 
-        public void OnUserCommandAdd(string userCommand)
+        public void OnUserCommandAdd(CommandInfo commandInfo)
         {
         }
 
-        public void OnUserCommandDelete(string userCommand)
+        public void OnUserCommandDelete(CommandInfo commandInfo)
         {
         }
 
-        public void OnUserCommandUpdate(string userCommand)
+        public void OnUserCommandUpdate(CommandInfo commandInfo)
         {
         }
 
-        public void OnUserStatusChanged(OnlineStatus userOnlineStatus)
+        public void OnUserOnlineStatusChanged(string userId, Platform[] platforms)
         {
         }
     }

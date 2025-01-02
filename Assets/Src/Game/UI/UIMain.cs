@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using TMPro;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
 using Dawn.Game.Event;
 using GameFramework;
 using GameFramework.Event;
@@ -100,7 +100,7 @@ namespace Dawn.Game.UI
 
         void RefreshUnRead()
         {
-            IMSDK.GetTotalUnreadMsgCount((unreadCount, errCode, errMsg) =>
+            IMSDK.GetTotalUnreadMsgCount((unreadCount) =>
             {
                 unRead.gameObject.SetActive(unreadCount > 0);
                 if (unreadCount > 0)

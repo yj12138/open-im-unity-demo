@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
-using UnityGameFramework.Runtime;
+using OpenIM.Proto;
+
 namespace Dawn.Game.Event
 {
     public class OnRecvMsg : GameEventArgs
@@ -17,7 +14,7 @@ namespace Dawn.Game.Event
             }
         }
         public bool IsOffline;
-        public Message Msg;
+        public IMMessage Msg;
 
         public override void Clear()
         {

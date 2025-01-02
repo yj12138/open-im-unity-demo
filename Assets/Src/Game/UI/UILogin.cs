@@ -89,7 +89,7 @@ namespace Dawn.Game.UI
             var userTokenReq = new UserTokenReq()
             {
                 secret = "openIM123",
-                platformID = (int)Player.PlatformID,
+                platformID = (int)Player.Platform,
                 userID = userId.text,
             };
             var reqStr = JsonUtility.ToJson(userTokenReq);

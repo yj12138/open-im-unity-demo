@@ -1,6 +1,6 @@
 ﻿
 using Dawn.Game;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
 using UnityEngine;
 
 namespace Dawn

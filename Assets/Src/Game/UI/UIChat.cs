@@ -3,9 +3,10 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using SuperScrollView;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
 using Dawn.Game.Event;
 using GameFramework.Event;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -15,22 +16,23 @@ namespace Dawn.Game.UI
         {
             None, Done, Requesting,
         }
-        class SendMsgCallBack : IMsgSendCallBack
+        class SendMsgCallBack : ISendMsg
         {
             UIChat ui;
             public SendMsgCallBack(UIChat ui)
             {
 
             }
+
             public void OnError(int code, string errMsg)
             {
+                Debug.LogError(errMsg);
             }
 
             public void OnProgress(long progress)
             {
             }
-
-            public void OnSuccess(Message msg)
+            public void OnSuccess(IMMessage msg)
             {
                 ui.OnSendMsgSuc(msg);
             }
@@ -56,12 +58,13 @@ namespace Dawn.Game.UI
         LoopListView2 chatList;
         LoopListView2 chatList_topdown;
         TMP_InputField msgInput;
-        List<Message> msgList;
         RectTransform centerRect;
         RectTransform listRect;
         RectTransform contentRect;
-        OpenIM.IMSDK.Unity.Conversation conversation;
-        UserInfo selfUserInfo;
+
+        List<IMMessage> msgList;
+        IMConversation conversation;
+        IMUser selfUserInfo;
 
         RequestHistoryStatus requestHistoryStatus = RequestHistoryStatus.None;
 
@@ -80,7 +83,7 @@ namespace Dawn.Game.UI
             centerRect = GetRectTransform("Panel/content/center");
             listRect = GetRectTransform("Panel/content/center/list");
             contentRect = GetRectTransform("Panel/content/center/list/Viewport/Content");
-            msgList = new List<Message>();
+            msgList = new List<IMMessage>();
             chatList.InitListView(0, (list, index) =>
             {
                 if (index < 0) return null;
@@ -88,7 +91,7 @@ namespace Dawn.Game.UI
                 LoopListViewItem2 itemNode = null;
                 var msgStruct = msgList[index];
                 var isSelf = false;
-                isSelf = msgStruct.SendID == IMSDK.GetLoginUserId();
+                isSelf = msgStruct.SendID == Player.Instance.UserId;
                 if (isSelf)
                 {
                     itemNode = list.NewListViewItem("self");
@@ -115,9 +118,9 @@ namespace Dawn.Game.UI
                 if (index < 0) return null;
                 if (msgList.Count <= index) return null;
                 LoopListViewItem2 itemNode = null;
-                var msgStruct = msgList[(msgList.Count - 1) - index];
+                var msgStruct = msgList[msgList.Count - 1 - index];
                 var isSelf = false;
-                isSelf = msgStruct.SendID == IMSDK.GetLoginUserId();
+                isSelf = msgStruct.SendID == Player.Instance.UserId;
                 if (isSelf)
                 {
                     itemNode = list.NewListViewItem("self");
@@ -158,11 +161,11 @@ namespace Dawn.Game.UI
             node.LayoutElement = node.ContentStrRect.GetComponent<LayoutElement>();
             return node;
         }
-        void SetChatItemInfo(ChatItem item, Message msgStruct, bool isSelf)
+        void SetChatItemInfo(ChatItem item, IMMessage msg, bool isSelf)
         {
-            if (msgStruct.TextElem != null)
+            if (msg.TextElem != null)
             {
-                item.ContentStr.text = msgStruct.TextElem.Content;
+                item.ContentStr.text = msg.TextElem.Content;
             }
             else
             {
@@ -183,9 +186,9 @@ namespace Dawn.Game.UI
             {
                 item.ContentArrow.color = Color.white;
                 item.ContentBg.color = Color.white;
-                if (conversation.ConversationType == (int)ConversationType.Single)
+                if (conversation.ConversationType == SessionType.Single)
                 {
-                    item.ReadStatus.text = msgStruct.IsRead ? "已读" : "未读";
+                    item.ReadStatus.text = msg.IsRead ? "已读" : "未读";
                 }
                 else
                 {
@@ -204,28 +207,24 @@ namespace Dawn.Game.UI
             {
                 item.ContentArrow.color = new Color32(160, 231, 90, 255);
                 item.ContentBg.color = new Color32(160, 231, 90, 255);
-                SetImage(item.Icon, msgStruct.SenderFaceURL);
+                SetImage(item.Icon, msg.SenderFaceURL);
                 OnClick(item.Btn, () =>
                 {
-                    GameEntry.UI.OpenUI("UserInfo", msgStruct.SendID);
+                    GameEntry.UI.OpenUI("UserInfo", msg.SendID);
                 });
             }
         }
         protected override void OnOpen(object userData)
         {
             base.OnOpen(userData);
-            conversation = userData as OpenIM.IMSDK.Unity.Conversation;
+            conversation = userData as IMConversation;
             if (conversation.UnreadCount > 0)
             {
-                IMSDK.MarkConversationMessageAsRead((suc, err, errMsg) =>
+                IMSDK.MarkConversationMessageAsRead((suc) =>
                 {
                     if (suc)
                     {
                         Debug.Log("Mark as Read");
-                    }
-                    else
-                    {
-                        Debug.Log(errMsg);
                     }
                 }, conversation.ConversationID);
             }
@@ -283,7 +282,7 @@ namespace Dawn.Game.UI
                     if (msgList.Count > 0)
                     {
                         var msgStruct = msgList[msgList.Count - 1];
-                        ReqeustHistory(msgStruct.ClientMsgID, msgStruct.Seq);
+                        ReqeustHistory(msgStruct.ClientMsgID, 20);
                     }
                 }
             }
@@ -297,16 +296,12 @@ namespace Dawn.Game.UI
         {
             chatList.gameObject.SetActive(false);
             chatList_topdown.gameObject.SetActive(false);
-            IMSDK.GetSelfUserInfo((userInfo, err, errMsg) =>
+            IMSDK.GetSelfUserInfo((userInfo) =>
             {
                 if (userInfo != null)
                 {
                     selfUserInfo = userInfo;
                     RefreshList(chatList, msgList.Count);
-                }
-                else
-                {
-                    Debug.Log(errMsg);
                 }
             });
             msgList.Clear();
@@ -319,16 +314,16 @@ namespace Dawn.Game.UI
             }
         }
 
-        void ReqeustHistory(string startMsgId, long lastMinSeq, int count = 20)
+        void ReqeustHistory(string startMsgId, int count)
         {
             if (requestHistoryStatus == RequestHistoryStatus.Requesting) return;
             requestHistoryStatus = RequestHistoryStatus.Requesting;
 
-            IMSDK.GetAdvancedHistoryMessageList((list, err, msg) =>
+            IMSDK.GetHistoryMessageList((list) =>
             {
                 if (list != null)
                 {
-                    for (int i = (list.MessageList.Length - 1); i >= 0; i--)
+                    for (int i = list.MessageList.Count - 1; i >= 0; i--)
                     {
                         msgList.Add(list.MessageList[i]);
                     }
@@ -351,13 +346,7 @@ namespace Dawn.Game.UI
                     chatList.gameObject.SetActive(true);
                 }
                 requestHistoryStatus = RequestHistoryStatus.Done;
-            }, new GetAdvancedHistoryMessageListParams()
-            {
-                ConversationID = conversation.ConversationID,
-                Count = count,
-                StartClientMsgID = startMsgId,
-                LastMinSeq = lastMinSeq,
-            });
+            }, conversation.ConversationID, startMsgId, count, true);
         }
         void TrySendTextMsg(string value)
         {
@@ -367,15 +356,16 @@ namespace Dawn.Game.UI
                 GameEntry.UI.Tip(" text is empty");
                 return;
             }
-            var msgStruct = IMSDK.CreateTextMessage(value);
-            IMSDK.SendMessage(sendMsgCallBack, msgStruct, conversation.UserID, conversation.GroupID, new OfflinePushInfo()
+            IMSDK.CreateTextMessage((msg) =>
             {
-            }, true);
-            msgInput.text = "";
+                IMSDK.SendMessage(sendMsgCallBack, msg, conversation.UserID, conversation.GroupID, true);
+                msgInput.text = "";
+            }, value);
+
         }
 
 
-        public void OnSendMsgSuc(Message msg)
+        public void OnSendMsgSuc(IMMessage msg)
         {
             msgList.Insert(0, msg);
             chatList.gameObject.SetActive(true);
@@ -411,7 +401,7 @@ namespace Dawn.Game.UI
             var msg = args.Msg;
             if (msg != null)
             {
-                if (conversation.ConversationType == (int)ConversationType.Single)
+                if (conversation.ConversationType == SessionType.Single)
                 {
                     if (conversation.UserID == msg.SendID)
                     {
@@ -419,7 +409,7 @@ namespace Dawn.Game.UI
                         RefreshList(chatList, msgList.Count);
                     }
                 }
-                else if (conversation.ConversationType == (int)ConversationType.Group)
+                else if (conversation.ConversationType == SessionType.WriteGroup)
                 {
                     if (conversation.GroupID == msg.GroupID)
                     {
@@ -428,15 +418,11 @@ namespace Dawn.Game.UI
                     }
                 }
             }
-            IMSDK.MarkConversationMessageAsRead((suc, err, errMsg) =>
+            IMSDK.MarkConversationMessageAsRead((suc) =>
             {
                 if (suc)
                 {
                     Debug.Log("Mark as Read");
-                }
-                else
-                {
-                    Debug.Log(errMsg);
                 }
             }, conversation.ConversationID);
         }

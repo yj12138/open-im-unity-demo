@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 using UnityGameFramework.Runtime;
+
 namespace Dawn.Game.Event
 {
     public enum AdvancedMsgOperation
@@ -21,8 +23,8 @@ namespace Dawn.Game.Event
             }
         }
         public AdvancedMsgOperation AdvancedMsgOperation;
-        public Message Msg;
-        public MessageRevoked MsgRevoked;
+        public IMMessage Msg;
+        public RevokedTips MsgRevoked;
         public List<MessageReceipt> MsgReceipts;
         public override void Clear()
         {

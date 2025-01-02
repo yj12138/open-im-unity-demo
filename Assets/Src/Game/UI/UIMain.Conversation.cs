@@ -6,7 +6,8 @@ using UnityEngine.UI;
 using System;
 using Dawn.Game.Event;
 using GameFramework.Event;
-using OpenIM.IMSDK.Unity;
+using OpenIM.IMSDK;
+using OpenIM.Proto;
 
 namespace Dawn.Game.UI
 {
@@ -28,7 +29,7 @@ namespace Dawn.Game.UI
         }
         RectTransform conversationRoot;
         LoopListView2 conversationList;
-        List<OpenIM.IMSDK.Unity.Conversation> localConversations;
+        List<IMConversation> localConversations;
         void InitConversation()
         {
             conversationRoot = GetRectTransform("Panel/content/center/conversation");
@@ -81,21 +82,17 @@ namespace Dawn.Game.UI
 
         void RefreshConversationList()
         {
-            IMSDK.GetAllConversationList((list, err, errMsg) =>
+            IMSDK.GetAllConversationList((list) =>
             {
                 if (list != null)
                 {
-                    localConversations = list;
+                    localConversations.AddRange(list);
                     RefreshList(conversationList, localConversations.Count);
-                }
-                else
-                {
-                    Debug.LogError(errMsg);
                 }
             });
         }
 
-        void SetConversationItemInfo(ConversationItem item, OpenIM.IMSDK.Unity.Conversation conversation)
+        void SetConversationItemInfo(ConversationItem item, IMConversation conversation)
         {
             item.Name.text = conversation.ShowName;
             SetImage(item.Icon, conversation.FaceURL);
@@ -104,7 +101,7 @@ namespace Dawn.Game.UI
             DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(conversation.LatestMsgSendTime);
             DateTime localDateTime = dateTimeOffset.LocalDateTime;
             item.Time.text = localDateTime.ToShortTimeString();
-            Message msg = OpenIM.IMSDK.Unity.Util.Utils.FromJson<Message>(conversation.LatestMsg);
+            var msg = conversation.LatestMsg;
             if (msg != null && msg.TextElem != null)
             {
                 item.Msg.text = msg.TextElem.Content;
@@ -132,15 +129,11 @@ namespace Dawn.Game.UI
             });
             OnClick(item.DeleteBtn, () =>
             {
-                IMSDK.DeleteConversationAndDeleteAllMsg((suc, err, errMsg) =>
+                IMSDK.DeleteConversationAndDeleteAllMsg((suc) =>
                 {
                     if (suc)
                     {
                         RefreshConversationList();
-                    }
-                    else
-                    {
-                        GameEntry.UI.Tip(errMsg);
                     }
                 }, conversation.ConversationID);
             });

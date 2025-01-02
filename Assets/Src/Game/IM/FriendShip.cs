@@ -1,18 +1,16 @@
-
-using System.Collections.Generic;
 using Dawn.Game.Event;
-using OpenIM.IMSDK.Unity;
-using OpenIM.IMSDK.Unity.Listener;
+using OpenIM.Proto;
+using OpenIM.IMSDK.Listener;
 
 
 namespace Dawn.Game
 {
-    public class FriendShip : IFriendShipListener
+    public class FriendShipListener : IFriendShipListener
     {
-        public FriendShip()
+        public FriendShipListener()
         {
         }
-        public void OnBlackAdded(BlackInfo blackInfo)
+        public void OnBlackAdded(IMBlack blackInfo)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -21,7 +19,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnBlackDeleted(BlackInfo blackInfo)
+        public void OnBlackDeleted(IMBlack blackInfo)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -30,7 +28,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendAdded(FriendInfo friendInfo)
+        public void OnFriendAdded(IMFriend friendInfo)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -39,7 +37,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendDeleted(FriendInfo friendInfo)
+        public void OnFriendDeleted(IMFriend friendInfo)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -48,7 +46,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendInfoChanged(FriendInfo friendInfo)
+        public void OnFriendInfoChanged(IMFriend friendInfo)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -57,7 +55,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendApplicationAccepted(FriendApplicationInfo friendApplication)
+        public void OnFriendApplicationAccepted(IMFriendApplication friendApplication)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -66,7 +64,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendApplicationAdded(FriendApplicationInfo friendApplication)
+        public void OnFriendApplicationAdded(IMFriendApplication friendApplication)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -75,7 +73,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendApplicationDeleted(FriendApplicationInfo friendApplication)
+        public void OnFriendApplicationDeleted(IMFriendApplication friendApplication)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
@@ -84,7 +82,7 @@ namespace Dawn.Game
             });
         }
 
-        public void OnFriendApplicationRejected(FriendApplicationInfo friendApplication)
+        public void OnFriendApplicationRejected(IMFriendApplication friendApplication)
         {
             GameEntry.Event.Fire(OnFriendChange.EventId, new OnFriendChange()
             {
